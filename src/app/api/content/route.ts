@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
   const { link, title, type } = body;
-  if (!link || !title) {
+  if (!link || !title || !type) {
     return NextResponse.json(
       {
         error: "BAD REQUEST",
@@ -32,9 +32,11 @@ export const POST = async (req: NextRequest) => {
         type,
       },
     });
+    console.log("content: ");
+    console.log(content);
     return NextResponse.json({ content });
   } catch (err) {
-    console.log("Something went wrong");
+    console.log("Error = " + err);
     return NextResponse.json(
       { message: "Invalid Input" },
       {
@@ -77,6 +79,9 @@ export const GET = async (req: NextRequest) => {
 
 export const DELETE = async (req: NextRequest) => {
   const body = await req.json();
+  const session = await getServerSession(authOptions);
+  const userId = session.user.id;
+  console.log("body = " + JSON.stringify(body));
   const id = body.id;
   if (!id) {
     return NextResponse.json(
@@ -92,6 +97,7 @@ export const DELETE = async (req: NextRequest) => {
     const content = await prisma.content.delete({
       where: {
         id,
+        userId,
       },
     });
     return NextResponse.json({
@@ -100,7 +106,9 @@ export const DELETE = async (req: NextRequest) => {
   } catch (err) {
     return NextResponse.json(
       {
-        message: "invalid input",
+        error: "BAD REQUEST",
+        message:
+          "The provided input is invalid. Please check the data and try again.",
       },
       {
         status: 400,
